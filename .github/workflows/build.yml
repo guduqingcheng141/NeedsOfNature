@@ -1,0 +1,39 @@
+name: Build NeedsOfNature
+
+on:
+  workflow_dispatch:
+  push:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x ./gradlew
+
+      - name: Build with Gradle
+        run: ./gradlew build --no-daemon
+
+      - name: Collect jars
+        run: |
+          mkdir -p artifacts
+          find . -path '*/build/libs/*.jar' -not -name '*-sources.jar' -not -name '*-javadoc.jar' -not -name '*-dev.jar' -exec cp {} artifacts/ \;
+          ls -la artifacts
+
+      - name: Upload jar
+        uses: actions/upload-artifact@v4
+        with:
+          name: NeedsOfNature-jar
+          path: artifacts/*.jar
+          if-no-files-found: error
+          
